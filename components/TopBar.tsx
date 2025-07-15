@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { useRouter } from 'expo-router';
+
+const { width, height } = Dimensions.get('window');
+const router = useRouter();
 
 export default function TopBar() {
   return (
     <View style={styles.container}>
-      <TouchableOpacity>
-        <Image source={require('@/assets/images/256x256.png')} style={styles.icon} />
-      </TouchableOpacity>
+        <Image source={require('@/assets/images/256x256_blanco.png')} style={styles.icon} />
       <Text style={styles.title}>ToolAccess</Text>
-      <TouchableOpacity>
-        {/*<Image source={require('@/assets/images/notification-icon.png')} style={styles.icon} />*/}
+      <TouchableOpacity onPress={() => router.push('/notifications')}>
+        <Image source={require('@/assets/icons/notification.png')} style={styles.icon_not} />
       </TouchableOpacity>
     </View>
   );
@@ -17,20 +19,26 @@ export default function TopBar() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#002B5B',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: '#03346E',
+    paddingHorizontal: width * 0.04,  // ≈ 16
+    paddingVertical: height * 0.015,  // ≈ 12
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: height * 0.05,         // ≈ 40
   },
   title: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: height * 0.037,         // ≈ 30
     fontWeight: 'bold',
+    fontFamily: 'Georgia',
   },
-  icon: {
-    width: 28,
-    height: 28,
+  icon_not: {
+    width: width * 0.08,               // ≈ 40
+    height: width * 0.08,
+  },
+    icon: {
+    width: width * 0.1,               // ≈ 40
+    height: width * 0.1,
   },
 });

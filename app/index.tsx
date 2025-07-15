@@ -14,13 +14,10 @@ export default function WelcomeScreen() {
       <Text style={styles.title}>Bienvenido a</Text>
       <Text style={styles.subtitle}>ToolAccess</Text>
 
-      <TouchableOpacity style={styles.loginButton} onPress={() => router.replace('/login')}>
-        <Text style={styles.loginButtonText}>Iniciar sesión</Text>
+      <TouchableOpacity style={styles.loginButton} onPress={() => router.replace('/home')}>
+        <Text style={styles.loginButtonText}>Iniciar sesión con ToolAccess</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.registerButton} onPress={() => router.replace('/register')}>
-        <Text style={styles.registerButtonText}>Registrarse</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -61,21 +58,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: '#fff',
-    fontSize: height * 0.022,
-    fontWeight: 'bold',
-  },
-  registerButton: {
-    borderColor: '#03346E',
-    borderWidth: 1.5,
-    paddingVertical: height * 0.018,
-    paddingHorizontal: width * 0.08,
-    borderRadius: width * 0.02,
-    width: '80%',
-    alignItems: 'center',
-  },
-  registerButtonText: {
-    color: '#03346E',
-    fontSize: height * 0.022,
+    fontSize: height * 0.020,
     fontWeight: 'bold',
   },
 });
