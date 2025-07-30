@@ -1,12 +1,28 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Button } from 'react-native';
 import { useRouter } from 'expo-router';import { Dimensions } from 'react-native';
+import { useOAuth } from '../oauth/useOAuth'; 
 
 
 const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { isAuthenticated, user, login, logout, isLoading } = useOAuth();
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/home');
+    }
+  }, [isAuthenticated]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Cargando...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -14,7 +30,7 @@ export default function WelcomeScreen() {
       <Text style={styles.title}>Bienvenido a</Text>
       <Text style={styles.subtitle}>ToolAccess</Text>
 
-      <TouchableOpacity style={styles.loginButton} onPress={() => router.replace('/home')}>
+      <TouchableOpacity style={styles.loginButton} onPress={login}>
         <Text style={styles.loginButtonText}>Iniciar sesión con ToolAccess</Text>
       </TouchableOpacity>
 

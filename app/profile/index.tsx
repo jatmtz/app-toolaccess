@@ -5,15 +5,27 @@ import {
   StyleSheet,
   Dimensions,
   Image,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 import TopBar from '@/components/TopBar';
 import BottomTabBar from '@/components/BottomTabBar';
+import { useOAuth } from '@/oauth/useOAuth';
+import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ProfileScreen() {
-  return (
+  const { user, logout } = useOAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/'); // Redirige al index general
+  };
+
+
+return (
     <View style={styles.container}>
         <TopBar />
         <View style={styles.header}>
@@ -23,31 +35,26 @@ export default function ProfileScreen() {
           style={styles.profileIcon}
         />
 
-        <Text style={styles.role}>Rol del trabajador</Text>
-    </View>
-    
-    <ScrollView contentContainerStyle={styles.content}>
-    <View>
-
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Órdenes realizadas en total</Text>
-          <Text style={styles.statValue}>0</Text>
-        </View>
-
-        <Text style={styles.label}>Nombre:</Text>
-        <Text style={styles.value}>Juan Israel</Text>
-
-        <Text style={styles.label}>Apellido paterno:</Text>
-        <Text style={styles.value}>Martinez</Text>
-
-        <Text style={styles.label}>Apellido materno:</Text>
-        <Text style={styles.value}>Parra</Text>
-
-        <Text style={styles.label}>Email:</Text>
-        <Text style={styles.value}>ejemplo@gmail.com</Text>
+        <Text style={styles.role}>{user?.rol_id || 'Operador'}</Text>
       </View>
-          </ScrollView>
-
+      <ScrollView contentContainerStyle={styles.content}>
+        <View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Órdenes realizadas en total</Text>
+            <Text style={styles.statValue}>{user?.ordersCount ?? 0}</Text>
+          </View>
+          <Text style={styles.label}>Nombre:</Text>
+          <Text style={styles.value}>{user?.given_name || ''}</Text>
+          <Text style={styles.label}>Apellido paterno:</Text>
+          <Text style={styles.value}>{user?.family_name || ''}</Text>
+          <Text style={styles.label}>Email:</Text>
+          <Text style={styles.value}>{user?.email || ''}</Text>
+        </View>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+      </TouchableOpacity>
+      </ScrollView>
+      
       <BottomTabBar />
     </View>
   );
@@ -117,5 +124,20 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.01,
     marginTop: height * 0.005,
     color: '#333',
+  },
+    logoutButton: {
+    backgroundColor: '#E74C3C',
+    paddingVertical: height * 0.018,
+    paddingHorizontal: width * 0.08,
+    borderRadius: width * 0.02,
+    marginVertical: height * 0.02,
+    width: '80%',
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: height * 0.020,
+    fontWeight: 'bold',
   },
 });
