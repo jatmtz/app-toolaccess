@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,49 +6,126 @@ import {
   Dimensions,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import TopBar from '@/components/TopBar';
 import BottomTabBar from '@/components/BottomTabBar';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_GENERAL_URL } from '@/env';
 
 const { width, height } = Dimensions.get('window');
 
 // Función para asignar color según status
 function getStatusColor(status: string) {
-  switch (status) {
-    case 'Pendiente':
+  switch (status.toLowerCase()) {
+    case 'pendiente':
       return '#E6D712';
-    case 'Aprobado':
+    case 'aprobado':
       return '#20E544';
-    case 'Rechazado':
+    case 'rechazado':
       return '#E86E16';
-    case 'Terminado':
+    case 'terminado':
       return '#3321D2';
-    case 'Vencido':
+    case 'vencido':
       return '#FF0404';
     default:
       return '#555';
   }
 }
 
+// Tipo para las órdenes
+interface Order {
+  id: number;
+  folio: string;
+  estado: string;
+  fecha_solicitud: string;
+}
+
 export default function MyOrdersScreen() {
   const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Ejemplo de órdenes
-  const orders = [
-    { id: 1, title: 'Orden 1', status: 'Pendiente', date: '14 Mar 2025, 08:45 AM' },
-    { id: 2, title: 'Orden 2', status: 'Aprobado', date: '14 Mar 2025, 08:45 AM' },
-    { id: 3, title: 'Orden 3', status: 'Rechazado', date: '14 Mar 2025, 08:45 AM' },
-    { id: 4, title: 'Orden 4', status: 'Terminado', date: '14 Mar 2025, 08:45 AM' },
-    { id: 5, title: 'Orden 5', status: 'Vencido', date: '14 Mar 2025, 08:45 AM' },
-  ];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access_token');
+        
+        if (!token) {
+          throw new Error('No se encontró el token de acceso');
+        }
+
+        const response = await axios.get(`${API_GENERAL_URL}api/loan-orders`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.success) {
+          setOrders(response.data.data);
+        } else {
+          throw new Error(response.data.message || 'Error al obtener las órdenes');
+        }
+      } catch (err) {
+        setError(err.message || 'Ocurrió un error al cargar las órdenes');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Función para formatear la fecha
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Función para capitalizar el estado
+  const capitalizeStatus = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <TopBar />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#03346E" />
+        </View>
+        <BottomTabBar />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <TopBar />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+        <BottomTabBar />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <TopBar />
 
       <View style={styles.header}>
-        <Text style={styles.title}>Mis ordenes</Text>
+        <Text style={styles.title}>Mis órdenes</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -56,14 +133,14 @@ export default function MyOrdersScreen() {
           <TouchableOpacity
             key={order.id}
             style={styles.orderItem}
-            onPress={() => router.push('/order-details')}
+            onPress={() => router.push(`/order-details?id=${order.id}`)}
             activeOpacity={0.7}
           >
-            <Text style={styles.orderTitle}>{order.title}</Text>
-            <Text style={[styles.orderDescription, { color: getStatusColor(order.status) }]}>
-              {order.status}
+            <Text style={styles.orderTitle}>{order.folio}</Text>
+            <Text style={[styles.orderDescription, { color: getStatusColor(order.estado) }]}>
+              {capitalizeStatus(order.estado)}
             </Text>
-            <Text style={styles.orderDate}>{order.date}</Text>
+            <Text style={styles.orderDate}>{formatDate(order.fecha_solicitud)}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -119,95 +196,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Georgia',
     color: '#03346E',
   },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: height * 0.02,
-  },
-  toolImage: {
-    width: width * 0.2,
-    height: width * 0.2,
-    resizeMode: 'contain',
-    marginRight: width * 0.04,
-  },
-  toolInfo: {
+  loadingContainer: {
     flex: 1,
-  },
-  toolName: {
-    fontSize: height * 0.02,
-    fontWeight: 'bold',
-    fontFamily: 'Georgia',
-  },
-  toolDescription: {
-    fontSize: height * 0.016,
-    color: '#666',
-  },
-  counter: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: width * 0.02,
   },
-  circle: {
-    backgroundColor: '#eee',
-    borderRadius: width * 0.05,
-    width: width * 0.08,
-    height: width * 0.08,
+  errorText: {
+    color: '#FF0404',
+    fontSize: height * 0.02,
     textAlign: 'center',
-    textAlignVertical: 'center',
-    fontWeight: 'bold',
-    fontSize: height * 0.02,
-    paddingTop: height * 0.005,
-  },
-  counterValue: {
-    fontSize: height * 0.02,
-  },
-  label: {
-    fontSize: height * 0.022,
-    marginTop: height * 0.03,
-    marginBottom: height * 0.01,
-    fontFamily: 'Georgia',
-    color: '#03346E',
-  },
-  textArea: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: width * 0.04,
-    fontSize: height * 0.018,
-    minHeight: height * 0.15,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: height * 0.03,
-  },
-  timeInput: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: width * 0.03,
-    width: width * 0.2,
-    fontSize: height * 0.018,
-    marginRight: width * 0.02,
-  },
-  minutesLabel: {
-    fontSize: height * 0.018,
-  },
-  orderButton: {
-    backgroundColor: '#03346E',
-    paddingVertical: height * 0.02,
-    borderRadius: width * 0.02,
-    alignItems: 'center',
-  },
-  orderButtonText: {
-    color: '#fff',
-    fontSize: height * 0.018,
-    fontWeight: 'bold',
-  },
-  commentIcon: {
-    width: width * 0.08,
-    height: width * 0.08,
-    marginRight: width * 0.02,
-    marginTop: height * 0.015,
+    padding: width * 0.05,
   },
 });

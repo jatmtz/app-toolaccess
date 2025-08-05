@@ -50,6 +50,10 @@ export const useOAuth = () => {
       await AsyncStorage.setItem('access_token', tokens.access_token);
       await AsyncStorage.setItem('refresh_token', tokens.refresh_token);
       
+
+      console.log('Tokens received:', tokens);
+      console.log('Access Token:', tokens.access_token);
+      
       const userInfo = await getUserInfo(tokens.access_token);
       setUser(userInfo);
       setIsAuthenticated(true);

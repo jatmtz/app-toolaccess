@@ -34,7 +34,8 @@ export default function ErrorModal({ visible, onClose }: WarningModalProps) {
 
           <Text style={styles.message}>
             No se pudo completar la acción.{"\n"}
-            Inténtelo de nuevo más tarde.
+            Inténtelo de nuevo más tarde.{"\n"}
+            O verifique que la información ingresada sea correcta.
           </Text>
           
         </View>

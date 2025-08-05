@@ -25,7 +25,7 @@ export default function SuccessModal({ visible, onClose }: WarningModalProps) {
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>Herramienta agregada!</Text>
+          <Text style={styles.title}>Buenas noticias!</Text>
 
           <Image
             source={require('@/assets/icons/check-circle.png')}
@@ -33,7 +33,7 @@ export default function SuccessModal({ visible, onClose }: WarningModalProps) {
           />
 
           <Text style={styles.message}>
-            La herramienta fue agregada a la orden con éxito{"\n"}
+            Tu solicitud fue realizada con éxito{"\n"}
           </Text>
           
         </View>
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     width: width * 0.4,
     height: width * 0.4,
     resizeMode: 'contain',
-    marginVertical: height * 0.02,
+    marginVertical: height * 0.04,
   },
   message: {
     textAlign: 'center',

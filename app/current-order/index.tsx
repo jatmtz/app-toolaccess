@@ -1,28 +1,114 @@
+import BottomTabBar from '@/components/BottomTabBar';
+import ErrorModal from '@/components/ErrorModal';
+import SuccessModal from '@/components/SuccessModal';
+import TopBar from '@/components/TopBar';
+import WarningModal from '@/components/WarningModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { useFocusEffect } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Dimensions,
   Image,
+  ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  View,
 } from 'react-native';
-import TopBar from '@/components/TopBar';
-import BottomTabBar from '@/components/BottomTabBar';
-import WarningModal from '@/components/WarningModal';
+import { API_GENERAL_URL } from '../../env';
 
 const { width, height } = Dimensions.get('window');
 
 export default function CurrentOrderScreen() {
   const [justification, setJustification] = useState('');
   const [timeRequested, setTimeRequested] = useState('');
-
-  const [count1, setCount1] = useState(1);
-  const [count2, setCount2] = useState(1);
-
+  const [tools, setTools] = useState([]);
   const [warningVisible, setWarningVisible] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
+const [errorVisible, setErrorVisible] = useState(false);
+const [loading, setLoading] = useState(false);
+
+    useFocusEffect(
+    React.useCallback(() => {
+      const fetchOrder = async () => {
+        try {
+          const data = await AsyncStorage.getItem('loan_order');
+          if (data) {
+            setTools(JSON.parse(data));
+          } else {
+            setTools([]);
+          }
+        } catch (error) {
+          console.error('Error cargando la orden:', error);
+        }
+      };
+
+      fetchOrder();
+    }, [])
+  );
+
+  const enviarOrden = async () => {
+  try {
+    setLoading(true);
+
+    const token = await AsyncStorage.getItem('access_token');
+    const userId = await AsyncStorage.getItem('user_id');
+
+    if (!token) throw new Error('Token no disponible');
+
+    const herramientasFormateadas = tools.map(t => ({
+      id: t.id,
+      cantidad: t.cantidad,
+    }));
+
+    const payload = {
+      usuario_id: Number(userId), // solo si tu backend lo requiere explícitamente
+      herramientas: herramientasFormateadas,
+      tiempo_solicitado: parseInt(timeRequested),
+      justificacion: justification.trim(),
+    };
+
+    const response = await axios.post(`${API_GENERAL_URL}api/loan-orders`, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.data.success) {
+      // Limpiar orden en storage
+      await AsyncStorage.removeItem('loan_order');
+
+      setTools([]);
+      setJustification('');
+      setTimeRequested('');
+      setSuccessVisible(true);
+    } else {
+      console.log('Error del servidor:', response.data);
+      setErrorVisible(true);
+    }
+
+  } catch (error) {
+    console.error('Error al enviar la orden:', error);
+    setErrorVisible(true);
+  } finally {
+    setLoading(false);
+    setWarningVisible(false);
+  }
+};
+
+
+  const updateQuantity = (index: number, delta: number) => {
+  const newTools = [...tools];
+  newTools[index].cantidad = Math.max(0, newTools[index].cantidad + delta);
+  
+  // Filtrar herramientas con cantidad > 0
+  const filteredTools = newTools.filter(tool => tool.cantidad > 0);
+  
+  setTools(filteredTools);
+  AsyncStorage.setItem('loan_order', JSON.stringify(filteredTools));
+};
 
   return (
     <View style={styles.container}>
@@ -34,48 +120,33 @@ export default function CurrentOrderScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
 
-        {/* Item 1 */}
-        <View style={styles.item}>
-          <Image
-            source={require('@/assets/images/tool1.png')}
-            style={styles.toolImage}
-          />
-          <View style={styles.toolInfo}>
-            <Text style={styles.toolName}>Taladro</Text>
-            <Text style={styles.toolDescription}>Descripción</Text>
-          </View>
-          <View style={styles.counter}>
-            <TouchableOpacity onPress={() => setCount1(Math.max(0, count1 - 1))}>
-              <Text style={styles.circle}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.counterValue}>{count1}</Text>
-            <TouchableOpacity onPress={() => setCount1(count1 + 1)}>
-              <Text style={styles.circle}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Item 2 */}
-        <View style={styles.item}>
-          <Image
-            source={require('@/assets/images/tools/laminero.png')}
-            style={styles.toolImage}
-          />
-          <View style={styles.toolInfo}>
-            <Text style={styles.toolName}>Lijadora Orbital</Text>
-            <Text style={styles.toolDescription}>Descripción</Text>
-          </View>
-          <View style={styles.counter}>
-            <TouchableOpacity onPress={() => setCount2(Math.max(0, count2 - 1))}>
-              <Text style={styles.circle}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.counterValue}>{count2}</Text>
-            <TouchableOpacity onPress={() => setCount2(count2 + 1)}>
-              <Text style={styles.circle}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
+        {tools.length === 0 ? (
+          <Text style={{ textAlign: 'center', marginVertical: height * 0.05, fontSize: height * 0.02, color: '#999' }}>
+            Tu orden de préstamo está vacía.
+          </Text>
+        ) : (
+          tools.map((tool, index) => (
+            <View key={tool.id} style={styles.item}>
+              <Image
+                source={tool.foto_url ? { uri: tool.foto_url } : require('@/assets/images/tool1.png')}
+                style={styles.toolImage}
+              />
+              <View style={styles.toolInfo}>
+                <Text style={styles.toolName}>{tool.nombre}</Text>
+                <Text style={styles.toolDescription}>{tool.descripcion}</Text>
+              </View>
+              <View style={styles.counter}>
+                <TouchableOpacity onPress={() => updateQuantity(index, -1)}>
+                  <Text style={styles.circle}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.counterValue}>{tool.cantidad}</Text>
+                <TouchableOpacity onPress={() => updateQuantity(index, 1)}>
+                  <Text style={styles.circle}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        )}
         {/* Justificación */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.03, marginBottom: height * 0.01 }}>
         <Image
@@ -120,10 +191,21 @@ export default function CurrentOrderScreen() {
       <WarningModal
         visible={warningVisible}
         onClose={() => setWarningVisible(false)}
-        onConfirm={() => {
-          setWarningVisible(false);
-        }}
+        onConfirm={enviarOrden}
       />
+
+      <SuccessModal
+        visible={successVisible}
+        onClose={() => setSuccessVisible(false)}
+        message="Orden enviada correctamente al almacén."
+      />
+
+      <ErrorModal
+        visible={errorVisible}
+        onClose={() => setErrorVisible(false)}
+      />
+
+
 
       <BottomTabBar />
     </View>

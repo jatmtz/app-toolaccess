@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,53 +6,99 @@ import {
   Dimensions,
   Image,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import TopBar from '@/components/TopBar';
 import BottomTabBar from '@/components/BottomTabBar';
 import { useOAuth } from '@/oauth/useOAuth';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
+import { API_GENERAL_URL } from '@/env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { user, logout } = useOAuth();
   const router = useRouter();
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [isUserReady, setIsUserReady] = useState(false);
+
+    // Efecto para verificar cuando user está realmente listo
+  useEffect(() => {
+    if (user?.sub && !isUserReady) {
+      setIsUserReady(true);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!isUserReady) return;
+
+    const fetchOrdersCount = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access_token');
+        const response = await axios.get(
+          `${API_GENERAL_URL}api/loan-orders/order-count/${user.sub}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setOrdersCount(response.data.data.total_ordenes || 0);
+      } catch (error) {
+        console.error('Error fetching orders count:', error);
+        setOrdersCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrdersCount();
+  }, [isUserReady]);
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/'); // Redirige al index general
+    router.replace('/');
   };
 
-
-return (
+  return (
     <View style={styles.container}>
-        <TopBar />
-        <View style={styles.header}>
+      <TopBar />
+      <View style={styles.header}>
         <Text style={styles.title}>Mi Perfil</Text>
         <Image
           source={require('@/assets/icons/person-azul.png')}
           style={styles.profileIcon}
         />
-
         <Text style={styles.role}>{user?.rol_id || 'Operador'}</Text>
       </View>
+      
       <ScrollView contentContainerStyle={styles.content}>
         <View>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Órdenes realizadas en total</Text>
-            <Text style={styles.statValue}>{user?.ordersCount ?? 0}</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#03346E" />
+            ) : (
+              <Text style={styles.statValue}>{ordersCount}</Text>
+            )}
           </View>
+          
           <Text style={styles.label}>Nombre:</Text>
-          <Text style={styles.value}>{user?.given_name || ''}</Text>
+          <Text style={styles.value}>{user?.name || ''}</Text>
+          
           <Text style={styles.label}>Apellido paterno:</Text>
-          <Text style={styles.value}>{user?.family_name || ''}</Text>
+          <Text style={styles.value}>{user?.apellido_paterno || ''}</Text>
+          
           <Text style={styles.label}>Email:</Text>
           <Text style={styles.value}>{user?.email || ''}</Text>
         </View>
+        
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
+          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+        </TouchableOpacity>
       </ScrollView>
       
       <BottomTabBar />
