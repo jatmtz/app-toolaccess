@@ -256,7 +256,7 @@ export default function HomeScreen() {
                   }
                 >
                   <Image
-                    source={item.foto_url ? { uri: item.foto_url } : require('@/assets/images/tool1.png')}
+                    source={item.foto_url ? { uri: item.foto_url } : require('@/assets/images/image.png')}
                     style={styles.placeholderImage}
                     resizeMode="cover"
                   />

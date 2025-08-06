@@ -149,7 +149,7 @@ export default function ToolDetailsScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Image
-          source={tool.foto_url ? { uri: tool.foto_url } : require('@/assets/images/tool1.png')}
+          source={tool.foto_url ? { uri: tool.foto_url } : require('@/assets/images/image.png')}
           style={styles.toolImage}
           resizeMode="contain"
         />

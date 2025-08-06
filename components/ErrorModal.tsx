@@ -11,12 +11,13 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
-interface WarningModalProps {
+interface ErrorModalProps {
   visible: boolean;
   onClose: () => void;
+  message?: string;
 }
 
-export default function ErrorModal({ visible, onClose }: WarningModalProps) {
+export default function ErrorModal({ visible, onClose, message }: ErrorModalProps) {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
@@ -33,9 +34,7 @@ export default function ErrorModal({ visible, onClose }: WarningModalProps) {
           />
 
           <Text style={styles.message}>
-            No se pudo completar la acción.{"\n"}
-            Inténtelo de nuevo más tarde.{"\n"}
-            O verifique que la información ingresada sea correcta.
+            {message || 'No se pudo completar la acción.\nInténtelo de nuevo más tarde.\nO verifique que la información ingresada sea correcta.'}
           </Text>
           
         </View>

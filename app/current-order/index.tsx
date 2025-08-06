@@ -27,8 +27,10 @@ export default function CurrentOrderScreen() {
   const [tools, setTools] = useState([]);
   const [warningVisible, setWarningVisible] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
-const [errorVisible, setErrorVisible] = useState(false);
-const [loading, setLoading] = useState(false);
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
     useFocusEffect(
     React.useCallback(() => {
@@ -64,7 +66,7 @@ const [loading, setLoading] = useState(false);
     }));
 
     const payload = {
-      usuario_id: Number(userId), // solo si tu backend lo requiere explícitamente
+      usuario_id: Number(userId),
       herramientas: herramientasFormateadas,
       tiempo_solicitado: parseInt(timeRequested),
       justificacion: justification.trim(),
@@ -77,20 +79,21 @@ const [loading, setLoading] = useState(false);
     });
 
     if (response.data.success) {
-      // Limpiar orden en storage
       await AsyncStorage.removeItem('loan_order');
-
       setTools([]);
       setJustification('');
       setTimeRequested('');
+      setSuccessMessage(response.data.message); // Almacena el mensaje de éxito
       setSuccessVisible(true);
     } else {
       console.log('Error del servidor:', response.data);
+      setErrorMessage(response.data.message || 'Ocurrió un error al procesar la solicitud');
       setErrorVisible(true);
     }
 
   } catch (error) {
     console.error('Error al enviar la orden:', error);
+    setErrorMessage(error.response?.data?.message || error.message || 'Ocurrió un error inesperado');
     setErrorVisible(true);
   } finally {
     setLoading(false);
@@ -128,7 +131,7 @@ const [loading, setLoading] = useState(false);
           tools.map((tool, index) => (
             <View key={tool.id} style={styles.item}>
               <Image
-                source={tool.foto_url ? { uri: tool.foto_url } : require('@/assets/images/tool1.png')}
+                source={tool.foto_url ? { uri: tool.foto_url } : require('@/assets/images/image.png')}
                 style={styles.toolImage}
               />
               <View style={styles.toolInfo}>
@@ -195,17 +198,22 @@ const [loading, setLoading] = useState(false);
       />
 
       <SuccessModal
-        visible={successVisible}
-        onClose={() => setSuccessVisible(false)}
-        message="Orden enviada correctamente al almacén."
-      />
+  visible={successVisible}
+  onClose={() => {
+    setSuccessVisible(false);
+    setSuccessMessage(''); // Limpia el mensaje al cerrar
+  }}
+  message={successMessage}
+/>
 
-      <ErrorModal
-        visible={errorVisible}
-        onClose={() => setErrorVisible(false)}
-      />
-
-
+<ErrorModal
+  visible={errorVisible}
+  onClose={() => {
+    setErrorVisible(false);
+    setErrorMessage(''); // Limpia el mensaje al cerrar
+  }}
+  message={errorMessage}
+/>
 
       <BottomTabBar />
     </View>

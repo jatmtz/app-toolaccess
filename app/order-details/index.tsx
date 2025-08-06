@@ -197,7 +197,7 @@ export default function OrderDetailsScreen() {
               <Image
                 source={herramienta.herramienta?.imagen_url 
                   ? { uri: herramienta.herramienta.imagen_url } 
-                  : require('@/assets/images/tool1.png')}
+                  : require('@/assets/images/image.png')}
                 style={styles.toolImage}
               />
               <Text style={styles.toolText}>

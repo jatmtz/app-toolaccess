@@ -11,12 +11,13 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
-interface WarningModalProps {
+interface SuccessModalProps {
   visible: boolean;
   onClose: () => void;
+  message?: string;
 }
 
-export default function SuccessModal({ visible, onClose }: WarningModalProps) {
+export default function SuccessModal({ visible, onClose, message }: SuccessModalProps) {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
@@ -33,7 +34,7 @@ export default function SuccessModal({ visible, onClose }: WarningModalProps) {
           />
 
           <Text style={styles.message}>
-            Tu solicitud fue realizada con éxito{"\n"}
+            {message || 'Tu solicitud fue realizada con éxito'}
           </Text>
           
         </View>

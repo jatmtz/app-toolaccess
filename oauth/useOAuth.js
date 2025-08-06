@@ -3,6 +3,7 @@ import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { OAUTH_CONFIG } from './oauth-config';
+import { API_OAUTH_URL } from '../env'; 
 
 export const useOAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -50,7 +51,6 @@ export const useOAuth = () => {
       await AsyncStorage.setItem('access_token', tokens.access_token);
       await AsyncStorage.setItem('refresh_token', tokens.refresh_token);
       
-
       console.log('Tokens received:', tokens);
       console.log('Access Token:', tokens.access_token);
       
@@ -84,15 +84,37 @@ export const useOAuth = () => {
     return response.data;
   };
 
+  const revokeToken = async (token) => {
+    try {
+      await axios.post(`${API_OAUTH_URL}/revoke`, {
+        token: token,
+        token_type_hint: 'refresh_token'
+      });
+      console.log('Token revoked successfully');
+    } catch (error) {
+      console.error('Error revoking token:', error);
+      // Aún así continuamos con el logout aunque falle la revocación
+    }
+  };
+
   const login = () => {
     promptAsync();
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('access_token');
-    await AsyncStorage.removeItem('refresh_token');
-    setIsAuthenticated(false);
-    setUser(null);
+    try {
+      const refreshToken = await AsyncStorage.getItem('refresh_token');
+      if (refreshToken) {
+        await revokeToken(refreshToken);
+      }
+      
+      await AsyncStorage.removeItem('access_token');
+      await AsyncStorage.removeItem('refresh_token');
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   return {
