@@ -10,36 +10,31 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jatmtz.apptoolaccess",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "bundleIdentifier": "com.jatmtz.apptoolaccess"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.jatmtz.apptoolaccess"
     },
     "splash": {
-      "image": null,
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/256x256.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/256x256.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
+          "splashImage": "./assets/images/256x256.png",
+          "imageResizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
       ]
@@ -48,7 +43,9 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "origin": false
+      },
       "eas": {
         "projectId": "4c5ab134-ccd9-4525-b3b3-1ac2b81eca82"
       }

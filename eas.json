@@ -4,13 +4,14 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "android": {
-      "buildType": "apk",
-      "env": {
-        "EXPO_NO_TAR_COMPRESSION": "true",
-        "EXPO_USE_WINDOWS_PATHS": "true"
-      }
-    }
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {}
   },
   "submit": {
     "production": {}
