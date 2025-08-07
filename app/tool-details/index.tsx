@@ -1,30 +1,121 @@
 /**
- * @file Pantalla de detalles de herramienta
- * @module ToolDetailsScreen
- * @description Muestra los detalles completos de una herramienta específica
+ * ToolDetailsScreen.tsx
+ * 
+ * Pantalla que muestra los detalles completos de una herramienta específica
+ * 
+ * Características:
+ * - Muestra imagen, nombre, descripción y detalles técnicos
+ * - Permite agregar la herramienta a una orden de préstamo
+ * - Maneja estados de carga y error
+ * - Valida disponibilidad de stock
+ * 
+ * Cumple con:
+ * - ES6+ standards
+ * - React Native best practices
+ * - TypeScript typing
+ * - Clean Code principles
+ * - ISO/IEC 25010 (Maintainability, Reliability)
+ * 
+ * Versión: 1.1.0
  */
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { checkAuth, refreshToken } from '../../auth-utils';
+
+// Components
 import BottomTabBar from '@/components/BottomTabBar';
 import SuccessModal from '@/components/SuccessModal';
 import TopBar from '@/components/TopBar';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+
+// Config
 import { API_GENERAL_URL } from '../../env';
 
+// Constants
 const { width, height } = Dimensions.get('window');
+const TOOL_PLACEHOLDER_IMAGE = require('@/assets/images/image.png');
 
+/**
+ * Interfaz que representa una herramienta
+ */
+interface Tool {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  foto_url: string | null;
+  folio: string;
+  stock: number;
+  valor_reposicion: number;
+  subcategoria_id: number;
+}
+
+/**
+ * Interfaz que representa una subcategoría
+ */
+interface Subcategory {
+  id: number;
+  nombre: string;
+}
+
+/**
+ * Interfaz que representa un ítem en una orden de préstamo
+ */
+interface OrderItem {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  foto_url: string | null;
+  cantidad: number;
+}
+
+/**
+ * Construye la URL completa para una imagen
+ * @param path - Ruta relativa de la imagen
+ * @returns URL completa o null si no hay path
+ */
+const buildImageUrl = (path: string | null): string | null => {
+  return path ? `${API_GENERAL_URL}uploads/${path}` : null;
+};
+
+/**
+ * Componente principal de detalles de herramienta
+ */
 export default function ToolDetailsScreen() {
+  
   const router = useRouter();
   const params = useLocalSearchParams();
   const [successVisible, setSuccessVisible] = useState(false);
-  const [tool, setTool] = useState(null);
+  const [tool, setTool] = useState<Tool | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [subcategory, setSubcategory] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [subcategory, setSubcategory] = useState<Subcategory | null>(null);
 
-  // Obtener detalles de la herramienta
+  useEffect(() => {
+    const verifyToken = async () => {
+      const isValid = await checkAuth();
+      if (!isValid) {
+        const refreshed = await refreshToken();
+        if (!refreshed) router.replace('/');
+      }
+    };
+    verifyToken();
+  }, []);
+
+  /**
+   * Obtiene los detalles de la herramienta desde la API
+   */
   useEffect(() => {
     const fetchToolDetails = async () => {
       try {
@@ -35,8 +126,8 @@ export default function ToolDetailsScreen() {
 
         if (response.data.success) {
           setTool(response.data.data);
-          // Obtener detalles de la subcategoría
-          fetchSubcategoryDetails(response.data.data.subcategoria_id, token);
+          
+          fetchSubcategoryDetails(response.data.data.subcategoria_id, token || '');
         } else {
           setError('No se pudo obtener la información de la herramienta');
         }
@@ -48,7 +139,7 @@ export default function ToolDetailsScreen() {
       }
     };
 
-    const fetchSubcategoryDetails = async (subcategoryId, token) => {
+    const fetchSubcategoryDetails = async (subcategoryId: number, token: string) => {
       try {
         const response = await axios.get(`${API_GENERAL_URL}api/subcategories/${subcategoryId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -64,34 +155,38 @@ export default function ToolDetailsScreen() {
     fetchToolDetails();
   }, [params.id]);
 
+  /**
+   * Agrega la herramienta a la orden de préstamo
+   */
   const handleAddToOrder = async () => {
-  try {
-    const existingOrder = await AsyncStorage.getItem('loan_order');
-    let order = existingOrder ? JSON.parse(existingOrder) : [];
+    if (!tool) return;
+    
+    try {
+      const existingOrder = await AsyncStorage.getItem('loan_order');
+      let order: OrderItem[] = existingOrder ? JSON.parse(existingOrder) : [];
 
-    // Verifica si la herramienta ya está en la orden
-    const index = order.findIndex((item) => item.id === tool.id);
-    if (index !== -1) {
-      // Si ya está, aumenta el contador
-      order[index].cantidad += 1;
-    } else {
-      // Si no está, agrega con cantidad inicial 1
-      order.push({
-        id: tool.id,
-        nombre: tool.nombre,
-        descripcion: tool.descripcion,
-        foto_url: tool.foto_url,
-        cantidad: 1,
-      });
+      // Verifica si la herramienta ya está en la orden
+      const index = order.findIndex((item) => item.id === tool.id);
+      if (index !== -1) {
+        // Si ya está, aumenta el contador
+        order[index].cantidad += 1;
+      } else {
+        // Si no está, agrega con cantidad inicial 1
+        order.push({
+          id: tool.id,
+          nombre: tool.nombre,
+          descripcion: tool.descripcion,
+          foto_url: tool.foto_url,
+          cantidad: 1,
+        });
+      }
+
+      await AsyncStorage.setItem('loan_order', JSON.stringify(order));
+      setSuccessVisible(true);
+    } catch (err) {
+      console.error('Error al agregar a la orden:', err);
     }
-
-    await AsyncStorage.setItem('loan_order', JSON.stringify(order));
-    setSuccessVisible(true);
-  } catch (err) {
-    console.error('Error al agregar a la orden:', err);
-  }
-};
-
+  };
 
   if (loading) {
     return (
@@ -141,7 +236,6 @@ export default function ToolDetailsScreen() {
       </View>
     );
   }
-  
 
   return (
     <View style={styles.container}>
@@ -149,9 +243,14 @@ export default function ToolDetailsScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Image
-          source={tool.foto_url ? { uri: tool.foto_url } : require('@/assets/images/image.png')}
+          source={
+            tool.foto_url 
+              ? { uri: buildImageUrl(tool.foto_url) } 
+              : require('@/assets/images/image.png')
+          }
           style={styles.toolImage}
           resizeMode="contain"
+          onError={(e) => console.log('Error loading image:', e.nativeEvent.error)}
         />
 
         <Text style={styles.toolName}>{tool.nombre}</Text>
@@ -178,7 +277,7 @@ export default function ToolDetailsScreen() {
         </View>
 
         <TouchableOpacity 
-          style={styles.button} 
+          style={[styles.button, tool.stock <= 0 && styles.buttonDisabled]} 
           onPress={handleAddToOrder}
           disabled={tool.stock <= 0}
         >
@@ -199,6 +298,7 @@ export default function ToolDetailsScreen() {
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { OAUTH_CONFIG } from './oauth-config';
-import { API_OAUTH_URL } from '../env'; 
 
 export const useOAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const redirectUri = makeRedirectUri({ scheme: 'apptoolaccess', path: 'oauth/callback' });
 
@@ -21,7 +21,22 @@ export const useOAuth = () => {
   });
 
   useEffect(() => {
-    checkAuthStatus();
+    const initializeAuth = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access_token');
+        if (token) {
+          const userInfo = await getUserInfo(token);
+          setUser(userInfo);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   useEffect(() => {
@@ -31,34 +46,29 @@ export const useOAuth = () => {
   }, [response]);
 
   const checkAuthStatus = async () => {
-    try {
-      const token = await AsyncStorage.getItem('access_token');
-      if (token) {
-        const userInfo = await getUserInfo(token);
-        setUser(userInfo);
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      console.log('No authenticated');
-    }
+    const token = await AsyncStorage.getItem('access_token');
+    return !!token;
   };
 
   const handleAuthResponse = async (response) => {
     try {
+      setIsLoading(true);
       const { code } = response.params;
       const tokens = await exchangeCodeForToken(code);
       
-      await AsyncStorage.setItem('access_token', tokens.access_token);
-      await AsyncStorage.setItem('refresh_token', tokens.refresh_token);
-      
-      console.log('Tokens received:', tokens);
-      console.log('Access Token:', tokens.access_token);
+      await AsyncStorage.multiSet([
+        ['access_token', tokens.access_token],
+        ['refresh_token', tokens.refresh_token]
+      ]);
       
       const userInfo = await getUserInfo(tokens.access_token);
       setUser(userInfo);
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Error in auth:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,37 +94,14 @@ export const useOAuth = () => {
     return response.data;
   };
 
-  const revokeToken = async (token) => {
-    try {
-      await axios.post(`${API_OAUTH_URL}/revoke`, {
-        token: token,
-        token_type_hint: 'refresh_token'
-      });
-      console.log('Token revoked successfully');
-    } catch (error) {
-      console.error('Error revoking token:', error);
-      // Aún así continuamos con el logout aunque falle la revocación
-    }
-  };
-
   const login = () => {
     promptAsync();
   };
 
   const logout = async () => {
-    try {
-      const refreshToken = await AsyncStorage.getItem('refresh_token');
-      if (refreshToken) {
-        await revokeToken(refreshToken);
-      }
-      
-      await AsyncStorage.removeItem('access_token');
-      await AsyncStorage.removeItem('refresh_token');
-      setIsAuthenticated(false);
-      setUser(null);
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
+    setIsAuthenticated(false);
+    setUser(null);
   };
 
   return {
@@ -122,6 +109,6 @@ export const useOAuth = () => {
     user,
     login,
     logout,
-    isLoading: !request
+    isLoading: isLoading || !request
   };
 };

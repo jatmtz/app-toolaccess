@@ -1,34 +1,99 @@
-import BottomTabBar from '@/components/BottomTabBar';
-import TopBar from '@/components/TopBar';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    Image,
-    ActivityIndicator,
-    RefreshControl
-} from 'react-native';
-import axios from 'axios';
+/**
+ * NotificationsScreen.tsx
+ * 
+ * Pantalla que muestra la lista de notificaciones del usuario
+ * 
+ * Características:
+ * - Lista de notificaciones con iconos según tipo
+ * - Soporte para pull-to-refresh
+ * - Manejo de estados de carga y vacío
+ * - Navegación a detalles de notificación
+ * 
+ * Cumple con:
+ * - ES6+ standards
+ * - React Native best practices
+ * - TypeScript typing
+ * - Clean Code principles
+ * - ISO/IEC 25010 (Maintainability, Reliability)
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { checkAuth, refreshToken } from '../../auth-utils';
+
+// Components
+import BottomTabBar from '@/components/BottomTabBar';
+import TopBar from '@/components/TopBar';
+
+// Config
 import { API_GENERAL_URL } from '../../env';
 
+// Constants
 const { width, height } = Dimensions.get('window');
+const EMPTY_ICON = require('@/assets/icons/notification.png');
+const NOTIFICATION_ICON = require('@/assets/icons/notification_azul.png');
 
-export default function NotificationsScreen() {
+/**
+ * Tipos de notificación soportados
+ */
+type NotificationType = 
+  | 'prestamo_aprobado' 
+  | 'recordatorio_devolucion'
+  | 'multa_aplicada'
+  | 'sistema'
+  | string; // Para tipos desconocidos
+
+/**
+ * Interfaz que representa una notificación
+ */
+interface Notification {
+  id: number;
+  titulo: string;
+  mensaje: string;
+  fecha: string;
+  tipo: NotificationType;
+}
+
+/**
+ * Componente principal de listado de notificaciones
+ */
+const NotificationsScreen: React.FC = () => {
+  
   const router = useRouter();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  // Función para obtener notificaciones
-  const fetchNotifications = async () => {
+  useEffect(() => {
+    const verifyToken = async () => {
+      const isValid = await checkAuth();
+      if (!isValid) {
+        const refreshed = await refreshToken();
+        if (!refreshed) router.replace('/');
+      }
+    };
+    verifyToken();
+  }, []);
+
+  /**
+   * Obtiene las notificaciones del usuario desde la API
+   */
+  const fetchNotifications = useCallback(async (): Promise<void> => {
     try {
       const token = await AsyncStorage.getItem('access_token');
       
@@ -37,163 +102,165 @@ export default function NotificationsScreen() {
       }
 
       const response = await axios.get(`${API_GENERAL_URL}api/notifications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
         setNotifications(response.data.data.notificaciones);
+      } else {
+        console.warn('La respuesta de la API no fue exitosa:', response.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al obtener notificaciones:', error);
       // Aquí podrías mostrar un mensaje de error al usuario
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   // Cargar notificaciones al montar el componente
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [fetchNotifications]);
 
-  // Función para manejar el refresh
-  const onRefresh = () => {
+  /**
+   * Maneja la acción de pull-to-refresh
+   */
+  const handleRefresh = (): void => {
     setRefreshing(true);
     fetchNotifications();
   };
 
-  // Función para formatear la fecha
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return format(date, "dd MMM yyyy, hh:mm a", { locale: es });
+  /**
+   * Formatea una fecha en formato legible en español
+   * @param dateString - Cadena de fecha ISO
+   * @returns Fecha formateada
+   */
+  const formatDate = (dateString: string): string => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy, hh:mm a", { locale: es });
+    } catch {
+      return dateString;
+    }
   };
 
-  // Función para eliminar una notificación
-  /*const handleDeleteNotification = async (id) => {
-    try {
-      const token = await AsyncStorage.getItem('access_token');
-      await axios.delete(`${API_GENERAL_URL}api/notificaciones/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      // Actualizar el estado local eliminando la notificación
-      setNotifications(prev => prev.filter(notif => notif.id !== id));
-    } catch (error) {
-      console.error('Error al eliminar notificación:', error);
-    }
-  };*/
+  /**
+   * Navega a los detalles de una notificación
+   * @param notificationId - ID de la notificación seleccionada
+   */
+  const navigateToNotificationDetails = (notificationId: number): void => {
+    router.push({
+      pathname: '/notification-details',
+      params: { notificationId }
+    });
+  };
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <TopBar />
+  /**
+   * Renderiza el contenido principal según el estado
+   */
+  const renderContent = (): React.ReactNode => {
+    if (loading) {
+      return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#03346E" />
+          <Text style={styles.loadingText}>Cargando notificaciones...</Text>
         </View>
-      </View>
-    );
-  }
+      );
+    }
 
-  return (
-    <View style={styles.container}>
-      <TopBar />
+    if (notifications.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Image
+            source={EMPTY_ICON}
+            style={styles.emptyIcon}
+            accessibilityLabel="Icono de notificaciones vacías"
+          />
+          <Text style={styles.emptyText}>No tienes notificaciones</Text>
+        </View>
+      );
+    }
 
-      <View style={styles.header}>
-        <Text style={styles.title}>Mis notificaciones</Text>
-      </View>
-
+    return (
       <ScrollView 
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={handleRefresh}
             colors={['#03346E']}
             tintColor="#03346E"
+            title="Actualizando notificaciones"
+            titleColor="#03346E"
           />
         }
       >
-        {notifications.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Image
-              source={require('@/assets/icons/notification.png')}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyText}>No tienes notificaciones</Text>
+        {notifications.map(notification => (
+          <View 
+            key={`notification-${notification.id}`} 
+            style={styles.notificationItem}
+          >
+            <TouchableOpacity
+              style={styles.notificationRow}
+              onPress={() => navigateToNotificationDetails(notification.id)}
+              activeOpacity={0.7}
+              accessibilityLabel={`Notificación: ${notification.titulo}`}
+              accessibilityRole="button"
+            >
+              {/* Icono según tipo de notificación */}
+              <Image
+                source={NOTIFICATION_ICON} // Actualmente todos usan el mismo icono
+                style={styles.notificationIcon}
+                accessibilityLabel="Icono de notificación"
+              />
+              
+              <View style={styles.notificationContent}>
+                <Text 
+                  style={styles.notificationTitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {notification.titulo}
+                </Text>
+                <Text 
+                  style={styles.notificationDescription}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
+                  {notification.mensaje}
+                </Text>
+                <Text style={styles.notificationDate}>
+                  {formatDate(notification.fecha)}
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
-        ) : (
-          notifications.map(notification => (
-            <View key={notification.id} style={styles.notificacionItem}>
-              {/* Botón para eliminar 
-              <TouchableOpacity 
-                style={styles.closeIconContainer}
-                onPress={() => handleDeleteNotification(notification.id)}
-              >
-                <Image
-                  source={require('@/assets/icons/close.png')}
-                  style={styles.closeIcon}
-                />
-              </TouchableOpacity>*/}
-      
-              <TouchableOpacity
-                style={styles.notificacionRow}
-                onPress={() => router.push({
-                  pathname: '/notification-details',
-                  params: { notificationId: notification.id }
-                })}
-                activeOpacity={0.7}
-              >
-                {/* Icono según tipo de notificación */}
-                <Image
-                  source={getNotificationIcon(notification.tipo)}
-                  style={styles.notificacionIcon}
-                />
-                
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.notificacionTitle}>{notification.titulo}</Text>
-                  <Text 
-                    style={styles.notificacionDescription}
-                    numberOfLines={2}
-                    ellipsizeMode="tail"
-                  >
-                    {notification.mensaje}
-                  </Text>
-                  <Text style={styles.notificacionDate}>
-                    {formatDate(notification.fecha)}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ))
-        )}
+        ))}
       </ScrollView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <TopBar />
+
+      {/* Encabezado */}
+      <View style={styles.header}>
+        <Text style={styles.title} accessibilityLabel="Mis notificaciones">
+          Mis notificaciones
+        </Text>
+      </View>
+
+      {/* Contenido principal */}
+      {renderContent()}
 
       <BottomTabBar />
     </View>
   );
-}
-
-// Función para obtener el icono según el tipo de notificación
-const getNotificationIcon = (tipo) => {
-  switch(tipo) {
-    case 'prestamo_aprobado':
-      return require('@/assets/icons/notification_azul.png');
-    case 'recordatorio_devolucion':
-      return require('@/assets/icons/notification_azul.png');
-    case 'multa_aplicada':
-      return require('@/assets/icons/notification_azul.png');
-    case 'sistema':
-      return require('@/assets/icons/notification_azul.png');
-    default:
-      return require('@/assets/icons/notification_azul.png');
-  }
 };
 
+// Estilos del componente
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -202,6 +269,16 @@ const styles = StyleSheet.create({
   header: {
     marginTop: height * 0.02,
     alignItems: 'center',
+    paddingVertical: height * 0.01,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    fontSize: height * 0.03,
+    fontWeight: 'bold',
+    fontFamily: 'Georgia',
+    color: '#03346E',
+    textAlign: 'center',
   },
   content: {
     padding: width * 0.05,
@@ -211,12 +288,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: height * 0.1,
+  },
+  loadingText: {
+    marginTop: height * 0.02,
+    color: '#666',
+    fontSize: height * 0.018,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: height * 0.2,
+    paddingBottom: height * 0.1,
   },
   emptyIcon: {
     width: width * 0.3,
@@ -227,61 +310,52 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: height * 0.02,
     color: '#888',
+    textAlign: 'center',
+    paddingHorizontal: width * 0.1,
   },
-  notificacionItem: {
-    backgroundColor: '#f0f0f0',
+  notificationItem: {
+    backgroundColor: '#f9f9f9',
     borderRadius: 12,
     padding: width * 0.04,
     marginBottom: height * 0.025,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    position: 'relative',
-    minHeight: height * 0.12,
   },
-  notificacionRow: {
+  notificationRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  notificacionIcon: {
-    width: width * 0.08,
-    height: width * 0.09,
+  notificationIcon: {
+    width: width * 0.09,
+    height: width * 0.11,
     marginRight: width * 0.04,
   },
-  closeIconContainer: {
-    position: 'absolute',
-    top: width * 0.025,
-    right: width * 0.025,
-    zIndex: 1,
-    padding: 4,
+  notificationContent: {
+    flex: 1,
   },
-  closeIcon: {
-    width: width * 0.05,
-    height: width * 0.05,
-    tintColor: '#888',
-  },
-  notificacionTitle: {
+  notificationTitle: {
     fontSize: height * 0.02,
     fontWeight: 'bold',
     marginBottom: 4,
     fontFamily: 'Georgia',
     color: '#03346E',
   },
-  notificacionDescription: {
+  notificationDescription: {
     fontSize: height * 0.016,
     color: '#555',
     marginBottom: 4,
+    lineHeight: height * 0.022,
   },
-  notificacionDate: {
+  notificationDate: {
     fontSize: height * 0.014,
     color: '#888',
     textAlign: 'right',
-  },
-  title: {
-    fontSize: height * 0.03,
-    fontWeight: 'bold',
-    fontFamily: 'Georgia',
-    color: '#03346E',
+    marginTop: height * 0.005,
+    fontStyle: 'italic',
   },
 });
+
+export default NotificationsScreen;
