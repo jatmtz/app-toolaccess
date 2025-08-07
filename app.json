@@ -23,6 +23,10 @@
       "edgeToEdgeEnabled": true,
       "package": "com.jatmtz.apptoolaccess"
     },
+    "splash": {
+      "image": null,
+      "backgroundColor": "#ffffff"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",
