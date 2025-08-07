@@ -4,23 +4,13 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "preview": {
-      "android": {
-        "buildType": "apk"
+    "android": {
+      "buildType": "apk",
+      "env": {
+        "EXPO_NO_TAR_COMPRESSION": "true",
+        "EXPO_USE_WINDOWS_PATHS": "true"
       }
-    },
-    "preview2": {
-      "android": {
-        "gradleCommand": ":app:assembleRelease"
-      }
-    },
-    "preview3": {
-      "developmentClient": true
-    },
-    "preview4": {
-      "distribution": "internal"
-    },
-    "production": {}
+    }
   },
   "submit": {
     "production": {}
