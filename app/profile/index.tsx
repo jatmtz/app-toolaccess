@@ -161,7 +161,7 @@ export default function ProfileScreen() {
           style={styles.profileIcon}
           accessibilityLabel="Icono de perfil"
         />
-        <Text style={styles.role}>{user?.rol_id ? 'Administrador' : 'Operador'}</Text>
+        <Text style={styles.role}>{'Operador'}</Text>
       </View>
       
       {/* Contenido principal */}
@@ -287,7 +287,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: height * 0.04,
     fontWeight: 'bold',
-    color: '#333',
   },
   label: {
     alignSelf: 'flex-start',
@@ -300,8 +299,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     fontSize: height * 0.018,
     marginBottom: height * 0.01,
-    marginTop: height * 0.005,
-    color: '#333',
+    marginTop: height * 0.005
   },
   logoutButton: {
     backgroundColor: '#E74C3C',

@@ -12,12 +12,9 @@
  */
 
 import { Stack } from "expo-router";
-import NotificationLogic from "../App";
 
 export default function RootLayout() {
   return (
-    <>
-      <NotificationLogic />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -28,6 +25,5 @@ export default function RootLayout() {
         {/* Pantalla principal de la aplicación */}
         <Stack.Screen name="index" />
       </Stack>
-    </>
   );
 }

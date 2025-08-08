@@ -41,22 +41,25 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#ddd',
     paddingBottom: height * 0.04,
-    paddingHorizontal: width * 0.025,
   },
   tab: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: width * 0.02, 
+    height: height * 0.05, 
   },
   icon: {
-    width: width * 0.06,   // ≈ 24
+    width: width * 0.06,
     height: width * 0.06,
     resizeMode: 'contain',
   },
   label: {
-    fontSize: height * 0.015,
+    fontSize: height * 0.012,
     fontFamily: 'Georgia',
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginTop: height * 0.005,
+    textAlign: 'center', // Asegura que el texto esté centrado
   },
 });

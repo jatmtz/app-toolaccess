@@ -5,7 +5,8 @@ export const OAUTH_CONFIG = {
   AUTH_URL: 'https://oauth.toolaccess.tech/oauth/authorize',
   TOKEN_URL: 'https://oauth.toolaccess.tech/oauth/token',
   USERINFO_URL: 'https://oauth.toolaccess.tech/oauth/userinfo',
-  SCOPES: ['read', 'write', 'profile']
+  SCOPES: ['read', 'write', 'profile'],
+  BASE: 'https://oauth.toolaccess.tech/oauth',
 };
 
 
