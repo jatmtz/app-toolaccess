@@ -18,7 +18,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.jatmtz.apptoolaccess",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile":  "process.env.GOOGLE_SERVICES_JSON"
     },
     "splash": {
       "image": "./assets/images/splash.png",
