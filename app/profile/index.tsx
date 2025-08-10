@@ -30,6 +30,7 @@ import {
   View,
 } from 'react-native';
 import { checkAuth, refreshToken } from '../../auth-utils';
+import { OAUTH_CONFIG } from '../../oauth/oauth-config';
 
 const { width, height } = Dimensions.get('window');
 
@@ -133,20 +134,44 @@ export default function ProfileScreen() {
     fetchOrdersCount();
   }, [isUserReady]);
 
-  /**
-   * @function handleLogout
-   * @async
-   * @description Maneja el proceso de cierre de sesión
-   * @returns {Promise<void>}
-   */
-  const handleLogout = async (): Promise<void> => {
-    try {
-      await logout();
-      router.replace('/');
-    } catch (error) {
-      console.error('Error during logout:', error);
+/**
+ * @function handleLogout
+ * @async
+ * @description Maneja el proceso de cierre de sesión, incluyendo la eliminación del push token
+ * @returns {Promise<void>}
+ */
+const handleLogout = async (): Promise<void> => {
+  try {
+    // Obtener el token de acceso y el ID de usuario
+    const accessToken = await AsyncStorage.getItem('access_token');
+    const userId = user?.sub;
+    
+    if (accessToken && userId) {
+      try {
+        // Hacer la llamada para eliminar el push token
+        await axios.put(
+          `https://oauth.toolaccess.tech/oauth/delete-push-token/${userId}`,
+          {}, // Cuerpo vacío ya que es PUT
+          {
+            headers: { 
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      } catch (error) {
+        console.warn('Error al eliminar push token (puede continuar con logout):', error);
+        // No detenemos el logout si falla esta llamada
+      }
     }
-  };
+    
+    // Proceder con el logout normal
+    await logout();
+    router.replace('/');
+  } catch (error) {
+    console.error('Error during logout:', error);
+  }
+};
 
   return (
     <View style={styles.container} testID="profile-screen">

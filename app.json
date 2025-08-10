@@ -4,7 +4,7 @@
     "slug": "app-toolaccess",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/256x256.png",
     "scheme": "apptoolaccess",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

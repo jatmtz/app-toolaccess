@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.018,
     paddingHorizontal: width * 0.08,
     borderRadius: width * 0.02,  // Bordes redondeados responsivos
-    width: '80%',                // Ancho relativo al contenedor
+    width: '85%',                // Ancho relativo al contenedor
     alignItems: 'center',
     elevation: 3,                // Sombra en Android
     shadowColor: '#000',         // Sombra en iOS
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: '#fff',
-    fontSize: height * 0.02,     // 2% de altura de pantalla
+    fontSize: 14,     // 2% de altura de pantalla
     fontWeight: 'bold',
   },
 });

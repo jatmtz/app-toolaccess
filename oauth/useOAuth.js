@@ -73,6 +73,7 @@ export const useOAuth = () => {
       await registerPushToken(userInfo.sub.toString(), tokens.access_token);
     }
       console.log('Login successful:', userInfo);
+      console.log('AccessToken:', tokens.access_token);
     } catch (error) {
       console.error('Error in auth:', error);
       throw error;
