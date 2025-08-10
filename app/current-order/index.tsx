@@ -101,16 +101,34 @@ const CurrentOrderScreen: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  React.useEffect(() => {
+  /**
+   * Efecto que verifica la autenticación del usuario al enfocar la pantalla
+   * y refresca el token si es necesario.
+   */
+useFocusEffect(
+  React.useCallback(() => {
+    let isActive = true;
+
     const verifyToken = async () => {
       const isValid = await checkAuth();
+      if (!isActive) return;
+      
       if (!isValid) {
         const refreshed = await refreshToken();
-        if (!refreshed) router.replace('/');
+        if (!refreshed && isActive) {
+          router.replace('/');
+        }
       }
     };
+
     verifyToken();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [router])
+);
+
 
   /**
    * Efecto que carga la orden almacenada al enfocar la pantalla
