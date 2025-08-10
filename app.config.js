@@ -18,7 +18,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: "com.jatmtz.apptoolaccess",
-      googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json"
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSONN || "./google-services.json"
     },
     splash: {
       image: "./assets/images/splash.png",
