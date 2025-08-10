@@ -2,6 +2,7 @@
 
 android
 ios
+google-services.json
 
 # dependencies
 node_modules/
