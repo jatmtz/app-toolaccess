@@ -32,8 +32,17 @@ export default {
     plugins: [
       "expo-router",
       "expo-splash-screen",
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      [
+        "expo-build-properties",
+        {
+          android: {
+            compileSdkVersion: 33,
+            targetSdkVersion: 33,
+            buildToolsVersion: "33.0.0",
+            enableProguardInReleaseBuilds: true
+          }
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true
