@@ -32,17 +32,6 @@ export default {
     plugins: [
       "expo-router",
       "expo-splash-screen",
-      [
-        "expo-build-properties",
-        {
-          android: {
-            compileSdkVersion: 33,
-            targetSdkVersion: 33,
-            buildToolsVersion: "33.0.0",
-            enableProguardInReleaseBuilds: true
-          }
-        }
-      ]
     ],
     experiments: {
       typedRoutes: true
