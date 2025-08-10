@@ -21,7 +21,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -102,16 +102,29 @@ export default function ToolDetailsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [subcategory, setSubcategory] = useState<Subcategory | null>(null);
 
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
+    let isActive = true;
+
     const verifyToken = async () => {
       const isValid = await checkAuth();
+      if (!isActive) return;
+      
       if (!isValid) {
         const refreshed = await refreshToken();
-        if (!refreshed) router.replace('/');
+        if (!refreshed && isActive) {
+          router.replace('/');
+        }
       }
     };
+
     verifyToken();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [router])
+);
 
   /**
    * Obtiene los detalles de la herramienta desde la API

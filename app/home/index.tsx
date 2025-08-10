@@ -20,7 +20,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -108,16 +108,29 @@ const HomeScreen: React.FC = () => {
 
   const router = useRouter();
 
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
+    let isActive = true;
+
     const verifyToken = async () => {
       const isValid = await checkAuth();
+      if (!isActive) return;
+      
       if (!isValid) {
         const refreshed = await refreshToken();
-        if (!refreshed) router.replace('/');
+        if (!refreshed && isActive) {
+          router.replace('/');
+        }
       }
     };
+
     verifyToken();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [router])
+);
 
   /**
    * Obtiene las categorías disponibles

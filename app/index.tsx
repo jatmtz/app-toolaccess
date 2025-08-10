@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useOAuth } from '../oauth/useOAuth';
+import { useFocusEffect } from 'expo-router';
 
 // Obtener dimensiones de la pantalla para diseño responsivo
 const { width, height } = Dimensions.get('window');

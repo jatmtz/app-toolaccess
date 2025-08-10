@@ -17,7 +17,7 @@ import { API_GENERAL_URL } from '@/env';
 import { useOAuth } from '@/oauth/useOAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -75,16 +75,29 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isUserReady, setIsUserReady] = useState<boolean>(false);
 
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
+    let isActive = true;
+
     const verifyToken = async () => {
       const isValid = await checkAuth();
+      if (!isActive) return;
+      
       if (!isValid) {
         const refreshed = await refreshToken();
-        if (!refreshed) router.replace('/');
+        if (!refreshed && isActive) {
+          router.replace('/');
+        }
       }
     };
+
     verifyToken();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [router])
+);
 
   /**
    * @effect useEffect - Efecto para verificar cuando user está realmente listo

@@ -19,7 +19,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -154,16 +154,29 @@ const OrderDetailsScreen: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
+    let isActive = true;
+
     const verifyToken = async () => {
       const isValid = await checkAuth();
+      if (!isActive) return;
+      
       if (!isValid) {
         const refreshed = await refreshToken();
-        if (!refreshed) router.replace('/');
+        if (!refreshed && isActive) {
+          router.replace('/');
+        }
       }
     };
+
     verifyToken();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [router])
+);
 
   /**
    * Obtiene los detalles de la orden desde la API

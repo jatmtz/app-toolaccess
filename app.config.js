@@ -14,7 +14,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/64x64.png",
+        foregroundImage: "./assets/images/256x256.png",
         backgroundColor: "#ffffff"
       },
       package: "com.jatmtz.apptoolaccess",
