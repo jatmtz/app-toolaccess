@@ -1,0 +1,51 @@
+export default {
+  expo: {
+    name: "app-toolaccess",
+    slug: "app-toolaccess",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/256x256.png",
+    scheme: "apptoolaccess",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.jatmtz.apptoolaccess"
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
+      package: "com.jatmtz.apptoolaccess",
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./google-services.json"
+    },
+    splash: {
+      image: "./assets/images/splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    web: {
+      bundler: "metro",
+      favicon: "./assets/images/256x256.png"
+    },
+    plugins: [
+      "expo-router",
+      "expo-splash-screen",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
+    ],
+    experiments: {
+      typedRoutes: true
+    },
+    extra: {
+      router: {
+        origin: false
+      },
+      eas: {
+        projectId: "4c5ab134-ccd9-4525-b3b3-1ac2b81eca82"
+      }
+    },
+    owner: "jatmtz"
+  }
+};
