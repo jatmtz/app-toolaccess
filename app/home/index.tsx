@@ -32,6 +32,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  RefreshControl
 } from 'react-native';
 import { checkAuth, refreshToken } from '../../auth-utils';
 
@@ -105,6 +106,7 @@ const HomeScreen: React.FC = () => {
   const [searchType, setSearchType] = useState<SearchType>('nombre');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState<boolean>(false);
   const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -131,6 +133,15 @@ useFocusEffect(
     };
   }, [router])
 );
+
+  /**
+   * Maneja la acción de pull-to-refresh
+   */
+  const handleRefresh = (): void => {
+    setRefreshing(true);
+    fetchTools();
+  };
+
 
   /**
    * Obtiene las categorías disponibles
@@ -183,8 +194,6 @@ useFocusEffect(
    * Obtiene las herramientas según los criterios de búsqueda
    */
   const fetchTools = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    
     try {
       const token = await AsyncStorage.getItem('access_token');
       if (!token) return;
@@ -218,6 +227,7 @@ useFocusEffect(
       console.error('Error fetching tools:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [searchText, selectedCategory, selectedSubcategory, searchType]);
 
@@ -424,6 +434,15 @@ useFocusEffect(
               keyExtractor={(item) => item.id.toString()}
               numColumns={3}
               contentContainerStyle={styles.resultsContainer}
+              refreshControl={
+                        <RefreshControl
+                          refreshing={refreshing}
+                          onRefresh={handleRefresh}
+                          colors={['#03346E']}
+                          tintColor="#03346E"
+                          titleColor="#03346E"
+                        />
+                      }
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.item}

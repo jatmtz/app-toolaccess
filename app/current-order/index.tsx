@@ -44,6 +44,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 4. Configuración y assets
 import { API_GENERAL_URL } from '../../env';
+import { Button } from '@react-navigation/elements';
 
 // Constantes globales
 const { width, height } = Dimensions.get('window');
@@ -278,124 +279,131 @@ useFocusEffect(
     <View style={styles.container}>
       <TopBar />
 
-      {/* Encabezado de la pantalla */}
       <View style={styles.header}>
         <Text style={styles.title}>Orden de préstamo</Text>
       </View>
 
-      {/* Contenido principal */}
       <ScrollView 
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Lista de herramientas */}
         {tools.length === 0 ? (
-          <Text style={styles.emptyOrderText}>
-            Tu orden de préstamo está vacía.
-          </Text>
+          <>
+            <Text style={styles.emptyOrderText}>
+              Tu orden de préstamo está vacía.
+              {'\n'}
+              {'\n'}
+              ¿Deseas agregar herramientas a tu orden?
+            </Text>
+            <TouchableOpacity
+              style={styles.orderButton}
+              accessibilityLabel="Agregar herramientas"
+              onPress={() => router.push('/home')} 
+              accessibilityRole="button"
+            >
+            <Text style={styles.orderButtonText}>Agregar herramienta a la orden</Text>
+            </TouchableOpacity>
+          </>
         ) : (
-          tools.map((tool, index) => (
-            <View key={`tool-${tool.id}`} style={styles.item}>
+          <>
+            {tools.map((tool, index) => (
+              <View key={`tool-${tool.id}`} style={styles.item}>
+                <Image
+                  source={tool.foto_url ? 
+                    { uri: buildImageUrl(tool.foto_url) } : 
+                    IMAGE_PLACEHOLDER
+                  }
+                  style={styles.toolImage}
+                  onError={(e) => console.log('Error loading image:', e.nativeEvent.error)}
+                  accessibilityLabel={`Imagen de ${tool.nombre}`}
+                />
+                
+                <View style={styles.toolInfo}>
+                  <Text style={styles.toolName}>{tool.nombre}</Text>
+                  <Text 
+                    style={styles.toolDescription}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                  >
+                    {tool.descripcion}
+                  </Text>
+                </View>
+                
+                <View style={styles.counter}>
+                  <TouchableOpacity 
+                    onPress={() => updateQuantity(index, -1)}
+                    accessibilityLabel="Reducir cantidad"
+                  >
+                    <Text style={styles.circle}>-</Text>
+                  </TouchableOpacity>
+                  
+                  <Text style={styles.counterValue}>{tool.cantidad}</Text>
+                  
+                  <TouchableOpacity 
+                    onPress={() => updateQuantity(index, 1)}
+                    accessibilityLabel="Aumentar cantidad"
+                  >
+                    <Text style={styles.circle}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            {/* Sección de formulario solo visible cuando hay herramientas */}
+            <View style={styles.justificationHeader}>
               <Image
-                source={tool.foto_url ? 
-                  { uri: buildImageUrl(tool.foto_url) } : 
-                  IMAGE_PLACEHOLDER
-                }
-                style={styles.toolImage}
-                onError={(e) => console.log('Error loading image:', e.nativeEvent.error)}
-                accessibilityLabel={`Imagen de ${tool.nombre}`}
+                source={COMMENT_ICON}
+                style={styles.commentIcon}
+                resizeMode="contain"
+                accessibilityLabel="Icono de comentario"
               />
-              
-              <View style={styles.toolInfo}>
-                <Text style={styles.toolName}>{tool.nombre}</Text>
-                <Text 
-                  style={styles.toolDescription}
-                  numberOfLines={2}
-                  ellipsizeMode="tail"
-                >
-                  {tool.descripcion}
-                </Text>
-              </View>
-              
-              <View style={styles.counter}>
-                <TouchableOpacity 
-                  onPress={() => updateQuantity(index, -1)}
-                  accessibilityLabel="Reducir cantidad"
-                >
-                  <Text style={styles.circle}>-</Text>
-                </TouchableOpacity>
-                
-                <Text style={styles.counterValue}>{tool.cantidad}</Text>
-                
-                <TouchableOpacity 
-                  onPress={() => updateQuantity(index, 1)}
-                  accessibilityLabel="Aumentar cantidad"
-                >
-                  <Text style={styles.circle}>+</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.label}>Justificación</Text>
             </View>
-          ))
+            
+            <TextInput
+              style={styles.textArea}
+              placeholder="Escribe aquí..."
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={4}
+              value={justification}
+              onChangeText={setJustification}
+              accessibilityLabel="Campo para justificación del préstamo"
+            />
+
+            <Text style={styles.label}>Tiempo solicitado:</Text>
+            
+            <View style={styles.timeRow}>
+              <TextInput
+                style={styles.timeInput}
+                placeholder="0"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={timeRequested}
+                onChangeText={setTimeRequested}
+                accessibilityLabel="Tiempo solicitado en minutos"
+              />
+              <Text style={styles.minutesLabel}>minutos</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.orderButton}
+              onPress={() => setWarningVisible(true)}
+              disabled={loading}
+              accessibilityLabel="Enviar orden de préstamo"
+              accessibilityRole="button"
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.orderButtonText}>Ordenar</Text>
+              )}
+            </TouchableOpacity>
+          </>
         )}
-
-        {/* Campo de justificación */}
-        <View style={styles.justificationHeader}>
-          <Image
-            source={COMMENT_ICON}
-            style={styles.commentIcon}
-            resizeMode="contain"
-            accessibilityLabel="Icono de comentario"
-          />
-          <Text style={styles.label}>Justificación</Text>
-        </View>
-        
-        <TextInput
-          style={styles.textArea}
-          placeholder="Escribe aquí..."
-          placeholderTextColor="#999"
-          multiline
-          numberOfLines={4}
-          value={justification}
-          onChangeText={setJustification}
-          accessibilityLabel="Campo para justificación del préstamo"
-        />
-
-        {/* Campo de tiempo solicitado */}
-        <Text style={styles.label}>Tiempo solicitado:</Text>
-        
-        <View style={styles.timeRow}>
-          <TextInput
-            style={styles.timeInput}
-            placeholder="0"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-            value={timeRequested}
-            onChangeText={setTimeRequested}
-            accessibilityLabel="Tiempo solicitado en minutos"
-          />
-          <Text style={styles.minutesLabel}>minutos</Text>
-        </View>
-
-        {/* Botón de enviar orden */}
-        <TouchableOpacity
-          style={[
-            styles.orderButton, 
-            tools.length === 0 && styles.disabledButton
-          ]}
-          onPress={() => tools.length > 0 && setWarningVisible(true)}
-          disabled={tools.length === 0 || loading}
-          accessibilityLabel="Enviar orden de préstamo"
-          accessibilityRole="button"
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.orderButtonText}>Ordenar</Text>
-          )}
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Modales de estado */}
+      {/* Modales */}
       <WarningModal
         visible={warningVisible}
         onClose={() => setWarningVisible(false)}
@@ -425,7 +433,6 @@ useFocusEffect(
   );
 };
 
-// Estilos del componente
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -446,6 +453,7 @@ const styles = StyleSheet.create({
     color: '#03346E',
   },
   emptyOrderText: {
+    marginTop: height * 0.3,
     textAlign: 'center',
     marginVertical: height * 0.05,
     fontSize: height * 0.02,
@@ -564,10 +572,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3,
     elevation: 3,
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-    shadowColor: 'transparent',
   },
   orderButtonText: {
     color: '#fff',

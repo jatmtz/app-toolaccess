@@ -29,6 +29,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from 'react-native';
 import { checkAuth, refreshToken } from '../../auth-utils';
 
@@ -108,6 +109,7 @@ const MyOrdersScreen: React.FC = () => {
   const [orders, setOrders] = useState<LoanOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
 useFocusEffect(
   React.useCallback(() => {
@@ -137,7 +139,7 @@ useFocusEffect(
    * Obtiene las órdenes del usuario desde la API
    */
   const fetchOrders = useCallback(async (): Promise<void> => {
-    setLoading(true);
+    //setLoading(true);
     setError('');
     
     try {
@@ -159,6 +161,7 @@ useFocusEffect(
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al cargar las órdenes');
     } finally {
+      setRefreshing(false);
       setLoading(false);
     }
   }, []);
@@ -167,6 +170,14 @@ useFocusEffect(
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  /**
+   * Maneja la acción de pull-to-refresh
+   */
+  const handleRefresh = (): void => {
+    setRefreshing(true);
+    fetchOrders();
+  };
 
   /**
    * Maneja la navegación a los detalles de una orden
@@ -216,6 +227,15 @@ useFocusEffect(
       <ScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                    colors={['#03346E']}
+                    tintColor="#03346E"
+                    titleColor="#03346E"
+                  />
+                }
       >
         {orders.map(order => (
           <TouchableOpacity
