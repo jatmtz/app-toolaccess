@@ -36,6 +36,7 @@ import { checkAuth, refreshToken } from '../../auth-utils';
 // Components
 import BottomTabBar from '@/components/BottomTabBar';
 import TopBar from '@/components/TopBar';
+import BackButton from '@/components/BackButton';
 
 // Config
 import { API_GENERAL_URL } from '@/env';
@@ -267,6 +268,7 @@ useFocusEffect(
   return (
     <View style={styles.container}>
       <TopBar />
+      <BackButton/>
 
       {/* Encabezado de la pantalla */}
       <View style={styles.header}>
@@ -288,7 +290,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    marginTop: height * 0.02,
     alignItems: 'center',
     paddingVertical: height * 0.01,
   },

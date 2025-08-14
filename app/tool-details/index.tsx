@@ -196,6 +196,7 @@ useFocusEffect(
 
       await AsyncStorage.setItem('loan_order', JSON.stringify(order));
       setSuccessVisible(true);
+      router.push('/home');
     } catch (err) {
       console.error('Error al agregar a la orden:', err);
     }

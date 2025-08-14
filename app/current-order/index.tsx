@@ -37,6 +37,7 @@ import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import TopBar from '@/components/TopBar';
 import WarningModal from '@/components/WarningModal';
+import BackButton from '@/components/BackButton';
 
 // 3. Librerías de terceros
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -278,6 +279,7 @@ useFocusEffect(
   return (
     <View style={styles.container}>
       <TopBar />
+      <BackButton />
 
       <View style={styles.header}>
         <Text style={styles.title}>Orden de préstamo</Text>
@@ -439,7 +441,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    marginTop: height * 0.02,
+    marginTop: height * 0.01,
     alignItems: 'center',
   },
   content: {

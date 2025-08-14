@@ -30,7 +30,7 @@ import {
   View,
 } from 'react-native';
 import { checkAuth, refreshToken } from '../../auth-utils';
-import { OAUTH_CONFIG } from '../../oauth/oauth-config';
+import BackButton from '@/components/BackButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -190,6 +190,7 @@ const handleLogout = async (): Promise<void> => {
     <View style={styles.container} testID="profile-screen">
       {/* Componente de barra superior */}
       <TopBar />
+      <BackButton/>
       
       {/* Encabezado del perfil */}
       <View style={styles.header}>
@@ -282,7 +283,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    marginTop: height * 0.02,
     alignItems: 'center',
   },
   content: {

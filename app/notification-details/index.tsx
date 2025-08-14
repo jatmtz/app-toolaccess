@@ -37,6 +37,7 @@ import { checkAuth, refreshToken } from '../../auth-utils';
 // Components
 import BottomTabBar from '@/components/BottomTabBar';
 import TopBar from '@/components/TopBar';
+import BackButton from '@/components/BackButton';
 
 // Config
 import { API_GENERAL_URL } from '../../env';
@@ -281,6 +282,7 @@ useFocusEffect(
   return (
     <View style={styles.container}>
       <TopBar />
+      <BackButton />
 
       {/* Encabezado */}
       {notification && (
@@ -309,7 +311,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    marginTop: height * 0.02,
     alignItems: 'center',
     paddingHorizontal: width * 0.05,
     paddingBottom: height * 0.02,

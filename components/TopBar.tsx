@@ -17,7 +17,9 @@ export default function TopBar() {
 
   return (
     <View style={styles.container}>
-      <Image source={require('@/assets/images/256x256_blanco.png')} style={styles.icon} />
+      <TouchableOpacity onPress={() => router.push('/home')}>
+        <Image source={require('@/assets/images/256x256_blanco.png')} style={styles.icon} />
+      </TouchableOpacity>
       <Text style={styles.title}>ToolAccess</Text>
       <TouchableOpacity onPress={() => router.push('/notifications')}>
         <Image source={require('@/assets/icons/notification.png')} style={styles.icon_not} />
