@@ -253,8 +253,8 @@ useFocusEffect(
    */
   const handleError = (error: any): void => {
     console.error('Error al enviar la orden:', error);
-    const message = error.response?.data?.message || 
-                    error.message || 
+    const message = error.response?.data?.errors?.errors || error.response?.data?.message ||
+                    error.message || error ||
                     'Ocurrió un error inesperado';
     setErrorMessage(message);
     setErrorVisible(true);

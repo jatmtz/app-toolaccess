@@ -7,6 +7,15 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 
+// Configura el manejador de notificaciones para primer plano
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,    // Muestra alerta cuando la app está en primer plano
+    shouldPlaySound: true,    // Reproduce sonido
+    shouldSetBadge: true,     // Actualiza el badge
+  }),
+});
+
 export const useOAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -23,6 +32,15 @@ export const useOAuth = () => {
   }, {
     authorizationEndpoint: OAUTH_CONFIG.AUTH_URL,
   });
+
+    useEffect(() => {
+    // Este es el mínimo listener necesario
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notificación recibida:', notification);
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
